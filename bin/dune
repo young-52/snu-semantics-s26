@@ -1,0 +1,4 @@
+(executable
+ (public_name formal_english)
+ (name main)
+ (libraries formal_english))
