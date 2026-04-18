@@ -97,6 +97,16 @@ let eval_vp (vp : verb_phrase) : Entity.Set.t =
           Entity_pair.Set.fold
             (fun (subj, _) acc -> Entity.Set.add subj acc)
             acc Entity.Set.empty
+      | NP_d _ -> (
+          let sem_of_obj = eval_np_d np in
+          match sem_of_obj with
+          | Some x ->
+              sem_of_verb |> Entity_pair.Set.filter (fun (_, obj) -> obj = x)
+              |> fun acc ->
+              Entity_pair.Set.fold
+                (fun (subj, _) acc -> Entity.Set.add subj acc)
+                acc Entity.Set.empty
+          | None -> raise Undefined)
       | _ -> failwith "Unimplemented")
 
 let eval (sentence : sentence) : bool =
