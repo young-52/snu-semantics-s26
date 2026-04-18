@@ -1,5 +1,7 @@
 open Syntax
 
+exception Undefined
+
 module Entity = struct
   type t = Maggie | Lisa | Bart | Marge | Homer | Burns
 
@@ -50,6 +52,23 @@ let eval_common_noun (noun : string) : Entity.Set.t =
     | "saxophonist" -> [ Lisa; Homer ]
     | _ -> failwith "Common noun not exists in this world")
 
+let eval_the_n' (n' : noun') : Entity.t option =
+  match n' with
+  | N' (N_common noun) -> (
+      match Entity.Set.to_list (eval_common_noun noun) with
+      | [ x ] -> Some x
+      | _ -> None)
+  | N' (N_proper _) -> None
+  | N'_mod _ -> failwith "NP modification unimplemented"
+
+let eval_np_d (np : noun_phrase) : Entity.t option =
+  match np with
+  | NP_d (det, n') -> (
+      match det with
+      | Det ("The" | "the") -> eval_the_n' n'
+      | _ -> failwith "Determiner not exists in this world")
+  | _ -> failwith "Determiner not exists"
+
 let eval_intrnasitive_verb (verb : string) : Entity.Set.t =
   Entity.Set.of_list
     (match verb with
@@ -87,4 +106,9 @@ let eval (sentence : sentence) : bool =
       Entity.Set.mem (eval_proper_name name) (eval_vp vp)
   | NP (N' (N_common noun)) ->
       Entity.Set.subset (eval_common_noun noun) (eval_vp vp)
-  | _ -> failwith "Unimplemented"
+  | NP_d _ -> (
+      let entity = eval_np_d np in
+      match entity with
+      | Some x -> Entity.Set.mem x (eval_vp vp)
+      | None -> raise Undefined)
+  | NP (N'_mod _) -> failwith "NP modification unimplemented"
