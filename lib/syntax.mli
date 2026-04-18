@@ -2,7 +2,7 @@
 type noun = N_proper of string | N_common of string
 type verb = V of string
 type adjective = Adj_inter of string | Adj_non of string
-type determiner = Det of string
+type determiner = Det of string | Det_q of string
 
 (* Intermediate projection *)
 type noun' = N' of noun | N'_mod of adjective * noun'

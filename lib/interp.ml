@@ -13,6 +13,14 @@ module Entity = struct
 
       let compare = compare
     end)
+
+    module Set = struct
+      include Set.Make (struct
+        type nonrec t = t
+
+        let compare = compare
+      end)
+    end
   end
 end
 
@@ -29,6 +37,39 @@ module Entity_pair = struct
     end)
   end
 end
+
+module Entity_set_pair = struct
+  type t = Entity.Set.t * Entity.Set.t
+
+  let compare = compare
+
+  module Set = struct
+    include Set.Make (struct
+      type nonrec t = t
+
+      let compare = compare
+    end)
+  end
+end
+
+let universe = Entity.Set.of_list [ Maggie; Lisa; Bart; Marge; Homer; Burns ]
+
+let powerset_of_universe : Entity.Set.Set.t =
+  Entity.Set.fold
+    (fun x ps ->
+      Entity.Set.Set.fold
+        (fun ss acc -> Entity.Set.Set.add (Entity.Set.add x ss) acc)
+        ps ps)
+    universe
+    (Entity.Set.Set.singleton Entity.Set.empty)
+
+let all_set_pairs : Entity_set_pair.Set.t =
+  Entity.Set.Set.fold
+    (fun a acc ->
+      Entity.Set.Set.fold
+        (fun b acc_inner -> Entity_set_pair.Set.add (a, b) acc_inner)
+        powerset_of_universe acc)
+    powerset_of_universe Entity_set_pair.Set.empty
 
 let eval_proper_name (name : string) : Entity.t =
   match name with
@@ -74,6 +115,18 @@ let eval_nonintersective_adjective (adj : string) : Entity.Set.t -> Entity.Set.t
         | _ -> failwith "Impossible in this world")
   | _ -> failwith "Not non-intersective adjective in this world"
 
+let eval_det_q (det : string) : Entity_set_pair.Set.t =
+  let filter_fn =
+   fun (a, b) ->
+    match det with
+    | "Every" | "every" -> Entity.Set.subset a b
+    | "A" | "An" | "Some" | "a" | "an" | "some" ->
+        not (Entity.Set.is_empty (Entity.Set.inter a b))
+    | "No" | "no" -> Entity.Set.is_empty (Entity.Set.inter a b)
+    | _ -> failwith "Quantificational determiner not exists in this world"
+  in
+  Entity_set_pair.Set.filter filter_fn all_set_pairs
+
 let rec eval_modified_n' (n' : noun') : Entity.Set.t =
   match n' with
   | N' (N_common noun) -> eval_common_noun noun
@@ -97,11 +150,22 @@ let eval_the_n' (n' : noun') : Entity.t option =
 
 let eval_np_d (np : noun_phrase) : Entity.t option =
   match np with
-  | NP_d (det, n') -> (
+  | NP_d (Det det, n') -> (
       match det with
-      | Det ("The" | "the") -> eval_the_n' n'
+      | "The" | "the" -> eval_the_n' n'
       | _ -> failwith "Determiner not exists in this world")
-  | _ -> failwith "Determiner not exists"
+  | _ -> failwith "No quantificational determiner here"
+
+let eval_np_q (np : noun_phrase) : Entity.Set.Set.t =
+  match np with
+  | NP_d (Det_q det, n') ->
+      let sem_of_det = eval_det_q det in
+      let sem_of_n' = eval_modified_n' n' in
+      Entity_set_pair.Set.fold
+        (fun (a, b) acc ->
+          if Entity.Set.equal a sem_of_n' then Entity.Set.Set.add b acc else acc)
+        sem_of_det Entity.Set.Set.empty
+  | _ -> failwith "No quantificational determiner here"
 
 let eval_intrnasitive_verb (verb : string) : Entity.Set.t =
   Entity.Set.of_list
@@ -150,9 +214,10 @@ let eval (sentence : sentence) : bool =
       Entity.Set.mem (eval_proper_name name) (eval_vp vp)
   | NP (N' (N_common noun)) ->
       Entity.Set.subset (eval_common_noun noun) (eval_vp vp)
-  | NP_d _ -> (
+  | NP_d (Det _, _) -> (
       let entity = eval_np_d np in
       match entity with
       | Some x -> Entity.Set.mem x (eval_vp vp)
       | None -> raise Undefined)
+  | NP_d (Det_q _, _) -> Entity.Set.Set.mem (eval_vp vp) (eval_np_q np)
   | NP (N'_mod _) -> failwith "NP modification unimplemented"
