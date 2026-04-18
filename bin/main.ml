@@ -10,7 +10,10 @@ let example3 : Syntax.sentence =
   S (NP (N' (N_proper "Homer")), VP_t (V "shot", NP (N' (N_proper "Burns"))))
 
 let print_result (sentence : Syntax.sentence) : unit =
-  sentence |> Interp.eval |> string_of_bool |> print_endline
+  let syntax = Syntax.string_of_sentence sentence in
+  let int_of_bool = fun x -> match x with true -> 1 | false -> 0 in
+  let extension = sentence |> Interp.eval |> int_of_bool |> string_of_int in
+  "⟦" ^ syntax ^ ".⟧ = " ^ extension |> print_endline
 
 let () =
   print_result example1;
