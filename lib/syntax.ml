@@ -1,13 +1,7 @@
 (* Head *)
 type noun = N_proper of string | N_common of string
 type verb = V of string
-
-type adjective =
-  | Adj_inter of string
-  | Adj_sub of string
-  | Adj_nonsub of string
-  | Adj_private of string
-
+type adjective = Adj_inter of string | Adj_non of string
 type determiner = Det of string
 
 (* Intermediate projection *)
@@ -26,7 +20,7 @@ let string_of_n (n : noun) : string =
 let string_of_v (v : verb) : string = match v with V x -> x
 
 let string_of_adj (adj : adjective) : string =
-  match adj with Adj_inter x | Adj_sub x | Adj_nonsub x | Adj_private x -> x
+  match adj with Adj_inter x | Adj_non x -> x
 
 let string_of_det (det : determiner) : string = match det with Det x -> x
 

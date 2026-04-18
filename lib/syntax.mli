@@ -1,13 +1,7 @@
 (* Head *)
 type noun = N_proper of string | N_common of string
 type verb = V of string
-
-type adjective =
-  | Adj_inter of string
-  | Adj_sub of string
-  | Adj_nonsub of string
-  | Adj_private of string
-
+type adjective = Adj_inter of string | Adj_non of string
 type determiner = Det of string
 
 (* Intermediate projection *)

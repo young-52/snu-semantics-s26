@@ -52,14 +52,48 @@ let eval_common_noun (noun : string) : Entity.Set.t =
     | "saxophonist" -> [ Lisa; Homer ]
     | _ -> failwith "Common noun not exists in this world")
 
+let eval_intersective_adjective (adj : string) : Entity.Set.t =
+  Entity.Set.of_list
+    (match adj with
+    | "streetsmart" -> [ Maggie; Bart ]
+    | "vegetarian" -> [ Lisa ]
+    | "American" -> [ Maggie; Lisa; Bart; Marge; Homer; Burns ]
+    | "female" -> [ Maggie; Lisa; Marge ]
+    | _ -> failwith "Not intersective adjective in this world")
+
+let eval_nonintersective_adjective (adj : string) : Entity.Set.t -> Entity.Set.t
+    =
+  match adj with
+  | "skillful" -> (
+      fun x ->
+        match Entity.Set.to_list x with
+        | [ Marge; Homer ] -> Entity.Set.singleton Marge
+        | [ Burns ] -> Entity.Set.singleton Burns
+        | [ Lisa; Homer ] -> Entity.Set.singleton Lisa
+        | [ Lisa; Homer; Bart ] -> Entity.Set.of_list [ Lisa; Bart ]
+        | _ -> failwith "Impossible in this world")
+  | _ -> failwith "Not non-intersective adjective in this world"
+
+let rec eval_modified_n' (n' : noun') : Entity.Set.t =
+  match n' with
+  | N' (N_common noun) -> eval_common_noun noun
+  | N'_mod (Adj_inter adj, n') ->
+      Entity.Set.inter (eval_intersective_adjective adj) (eval_modified_n' n')
+  | N'_mod (Adj_non adj, n') ->
+      (eval_nonintersective_adjective adj) (eval_modified_n' n')
+  | N' (N_proper _) -> failwith "No proper noun here"
+
 let eval_the_n' (n' : noun') : Entity.t option =
   match n' with
   | N' (N_common noun) -> (
       match Entity.Set.to_list (eval_common_noun noun) with
       | [ x ] -> Some x
       | _ -> None)
+  | N'_mod _ -> (
+      match Entity.Set.to_list (eval_modified_n' n') with
+      | [ x ] -> Some x
+      | _ -> None)
   | N' (N_proper _) -> None
-  | N'_mod _ -> failwith "NP modification unimplemented"
 
 let eval_np_d (np : noun_phrase) : Entity.t option =
   match np with

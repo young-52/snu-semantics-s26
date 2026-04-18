@@ -7,6 +7,9 @@ let examples : Syntax.sentence list =
     S (NP (N' (N_proper "Homer")), VP_t (V "shot", NP (N' (N_proper "Burns"))));
     S (NP_d (Det "The", N' (N_common "boss")), VP_i (V "skateboards"));
     S (NP_d (Det "The", N' (N_common "parent")), VP_i (V "exercises"));
+    S
+      ( NP_d (Det "The", N'_mod (Adj_inter "female", N' (N_common "parent"))),
+        VP_i (V "exercises") );
   ]
 
 let print_result (sentence : Syntax.sentence) : unit =
