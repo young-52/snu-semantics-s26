@@ -66,11 +66,11 @@ let eval_transitive_verb (verb : string) : Entity_pair.Set.t =
 
 let eval_vp (vp : verb_phrase) : Entity.Set.t =
   match vp with
-  | VP_0 (V verb) -> eval_intrnasitive_verb verb
-  | VP_1 (V verb, np) -> (
+  | VP_i (V verb) -> eval_intrnasitive_verb verb
+  | VP_t (V verb, np) -> (
       let sem_of_verb = eval_transitive_verb verb in
       match np with
-      | NP (N_proper name) ->
+      | NP (N' (N_proper name)) ->
           let sem_of_obj = eval_proper_name name in
           sem_of_verb
           |> Entity_pair.Set.filter (fun (_, obj) -> obj = sem_of_obj)
@@ -78,10 +78,13 @@ let eval_vp (vp : verb_phrase) : Entity.Set.t =
           Entity_pair.Set.fold
             (fun (subj, _) acc -> Entity.Set.add subj acc)
             acc Entity.Set.empty
-      | NP (N_common _) -> failwith "Unimplemented")
+      | _ -> failwith "Unimplemented")
 
 let eval (sentence : sentence) : bool =
   let (S (np, vp)) = sentence in
   match np with
-  | NP (N_proper name) -> Entity.Set.mem (eval_proper_name name) (eval_vp vp)
-  | NP (N_common noun) -> Entity.Set.subset (eval_common_noun noun) (eval_vp vp)
+  | NP (N' (N_proper name)) ->
+      Entity.Set.mem (eval_proper_name name) (eval_vp vp)
+  | NP (N' (N_common noun)) ->
+      Entity.Set.subset (eval_common_noun noun) (eval_vp vp)
+  | _ -> failwith "Unimplemented"
