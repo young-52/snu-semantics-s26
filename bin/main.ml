@@ -1,6 +1,7 @@
-open Formal_english
+module FE = Formal_english.Syntax
+module FOL = First_order_language.Syntax
 
-let examples : Syntax.sentence list =
+let fe_examples : FE.sentence list =
   [
     S (NP (N' (N_proper "Bart")), VP_i (V "exercises"));
     S (NP (N' (N_proper "Lisa")), VP_i (V "skateboards"));
@@ -12,14 +13,39 @@ let examples : Syntax.sentence list =
         VP_i (V "exercises") );
   ]
 
-let print_result (sentence : Syntax.sentence) : unit =
-  let syntax = Syntax.string_of_sentence sentence in
-  let int_of_bool = fun x -> match x with true -> 1 | false -> 0 in
+let fol_examples : FOL.formula list =
+  [
+    Conj
+      ( U_pred ("exercises", Const "Bart"),
+        Neg (U_pred ("exercises", Const "Lisa")) );
+    Cond
+      ( U_pred ("skateboards", Const "Bart"),
+        B_pred ("loves", Const "Bart", Const "Lisa") );
+  ]
+
+let int_of_bool : bool -> int = fun x -> match x with true -> 1 | false -> 0
+
+let print_fe_result (sentence : FE.sentence) : unit =
+  let open Formal_english.Interp in
+  let syntax = FE.string_of_sentence sentence in
   let extension =
-    match Interp.eval sentence with
+    match eval sentence with
     | x -> x |> int_of_bool |> string_of_int
-    | exception Interp.Undefined -> "undefined"
+    | exception Undefined -> "undefined"
   in
   "⟦" ^ syntax ^ ".⟧ = " ^ extension |> print_endline
 
-let () = List.iter print_result examples
+let print_fol_result (formula : FOL.formula) : unit =
+  let open First_order_language.Interp in
+  let syntax = FOL.string_of_formula formula in
+  let extension = formula |> eval |> int_of_bool |> string_of_int in
+  "⟦" ^ syntax ^ "⟧ = " ^ extension |> print_endline
+
+let () =
+  print_endline "============== Formal English ==============";
+  print_newline ();
+  List.iter print_fe_result fe_examples;
+  print_newline ();
+  print_endline "=========== First Order Language ===========";
+  print_newline ();
+  List.iter print_fol_result fol_examples
