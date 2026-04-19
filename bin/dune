@@ -1,4 +1,4 @@
 (executable
- (public_name formal_english)
+ (public_name snu_semantics)
  (name main)
  (libraries formal_english))
