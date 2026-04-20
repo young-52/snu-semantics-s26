@@ -1,4 +1,4 @@
-type term = Const of string
+type term = Const of string | Var of string
 
 type formula =
   | Eq of term * term
@@ -9,5 +9,7 @@ type formula =
   | Dis of formula * formula
   | Cond of formula * formula
   | Bicond of formula * formula
+  | Forall of string * formula
+  | Exists of string * formula
 
 val string_of_formula : formula -> string

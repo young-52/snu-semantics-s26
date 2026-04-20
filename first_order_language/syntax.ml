@@ -1,4 +1,4 @@
-type term = Const of string
+type term = Const of string | Var of string
 
 type formula =
   | Eq of term * term
@@ -9,8 +9,11 @@ type formula =
   | Dis of formula * formula
   | Cond of formula * formula
   | Bicond of formula * formula
+  | Forall of string * formula
+  | Exists of string * formula
 
-let string_of_term (term : term) = match term with Const name -> name
+let string_of_term (term : term) =
+  match term with Const name -> name | Var x -> x
 
 let rec string_of_formula (formula : formula) =
   match formula with
@@ -23,3 +26,5 @@ let rec string_of_formula (formula : formula) =
   | Dis (p, q) -> string_of_formula p ^ " ∨ " ^ string_of_formula q
   | Cond (p, q) -> string_of_formula p ^ " → " ^ string_of_formula q
   | Bicond (p, q) -> string_of_formula p ^ " ↔︎ " ^ string_of_formula q
+  | Forall (u, p) -> "∀" ^ u ^ "[" ^ string_of_formula p ^ "]"
+  | Exists (u, p) -> "∃" ^ u ^ "[" ^ string_of_formula p ^ "]"

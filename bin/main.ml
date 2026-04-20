@@ -21,6 +21,9 @@ let fol_examples : FOL.formula list =
     Cond
       ( U_pred ("skateboards", Const "Bart"),
         B_pred ("loves", Const "Bart", Const "Lisa") );
+    Forall ("x", Cond (U_pred ("male", Var "x"), U_pred ("exercises", Var "x")));
+    Exists
+      ("x", Conj (U_pred ("female", Var "x"), U_pred ("exercises", Var "x")));
   ]
 
 let int_of_bool : bool -> int = fun x -> match x with true -> 1 | false -> 0
@@ -38,7 +41,7 @@ let print_fe_result (sentence : FE.sentence) : unit =
 let print_fol_result (formula : FOL.formula) : unit =
   let open First_order_language.Interp in
   let syntax = FOL.string_of_formula formula in
-  let extension = formula |> eval |> int_of_bool |> string_of_int in
+  let extension = formula |> eval empty |> int_of_bool |> string_of_int in
   "⟦" ^ syntax ^ "⟧ = " ^ extension |> print_endline
 
 let () =

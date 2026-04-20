@@ -1,5 +1,14 @@
 open Syntax
 
-type entity = Lisa | Bart | Maggie
+module Individual : sig
+  type t
+end
 
-val eval : formula -> bool
+module StringMap : sig
+  type 'a t
+end
+
+type assignment = Individual.t StringMap.t
+
+val empty : assignment
+val eval : assignment -> formula -> bool
